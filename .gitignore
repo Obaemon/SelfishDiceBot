@@ -1,2 +1,5 @@
 # Secrets
 .env
+
+# uv / Python
+.venv/
