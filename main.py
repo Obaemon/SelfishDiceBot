@@ -1,7 +1,11 @@
 import os
 import discord
 from discord.ext import commands
+from discord import app_commands
 from dotenv import load_dotenv
+
+import re
+import random
 
 load_dotenv()
 
@@ -17,12 +21,38 @@ bot = commands.Bot(
     intents=intents,
 )
 
+def parseStringToDiceroll(content: str):
+    _DICE_RE = re.compile(r"(\d+)[dD](\d+)")
+    return _DICE_RE.fullmatch(content)
+
+def diceroll(count: int, number: int) -> list[int]:
+    result = []
+    for _ in range(count):
+        result.append(random.randint(1, number))
+    
+    return [random.randint(1, number) for _ in range(count)]
+
 @bot.event
 async def on_ready():
+    await bot.tree.sync()
     print(f"{bot.user} LOGIN")
 
-@bot.command()
-async def ping(ctx):
-    await ctx.send("Hello?")
+@bot.tree.command(name="ping", description="もしもーし？")
+async def ping(interaction: discord.Interaction):
+    await interaction.response.send_message("Hello?")
+
+@bot.event
+async def on_message(message):
+    if message.author.bot:
+        return
+    
+    content = message.content.strip()
+    print(message)
+    print(content)
+    if parsedString := parseStringToDiceroll(content):
+        reply = diceroll(int(parsedString.group(1)), int(parsedString.group(2)))
+        await message.reply(reply)
+
+    await bot.process_commands(message)
 
 bot.run(TOKEN)
