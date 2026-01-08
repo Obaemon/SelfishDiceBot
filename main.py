@@ -25,12 +25,19 @@ def parseStringToDiceroll(content: str):
     _DICE_RE = re.compile(r"(\d+)[dD](\d+)")
     return _DICE_RE.fullmatch(content)
 
+def parseStringToPickroll(content: str):
+    _PICK_RE = re.compile(r"(\d+)[cC](\d+)")
+    return _PICK_RE.fullmatch(content)
+
 def diceroll(count: int, number: int) -> list[int]:
-    result = []
-    for _ in range(count):
-        result.append(random.randint(1, number))
-    
-    return [random.randint(1, number) for _ in range(count)]
+    result = [random.randint(1, number) for _ in range(count)]
+    result.sort()
+    return result
+
+def pickroll(count: int, number: int) -> list[int]:
+    result = random.sample(range(1, number + 1), count)
+    result.sort()
+    return result
 
 @bot.event
 async def on_ready():
@@ -50,7 +57,13 @@ async def on_message(message):
     print(message)
     print(content)
     if parsedString := parseStringToDiceroll(content):
+        print("Diceroll detected")
         reply = diceroll(int(parsedString.group(1)), int(parsedString.group(2)))
+        await message.reply(reply)
+
+    elif parsedString := parseStringToPickroll(content):
+        print("Pickroll detected")
+        reply = pickroll(int(parsedString.group(1)), int(parsedString.group(2)))
         await message.reply(reply)
 
     await bot.process_commands(message)
